@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen Code Playground & Preview</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for gorgeous icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(107, 114, 128, 0.8); }
+    </style>
+</head>
+<body class="h-full bg-slate-900 text-slate-100 flex flex-col overflow-hidden">
+
+    <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between shrink-0 shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-code text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-base tracking-wide text-slate-100 flex items-center gap-2">
+                    NextGen Workspace 
+                    <span class="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full font-medium">Multi-File IDE</span>
+                </h1>
+                <p class="text-xs text-slate-400">Build, manage, and preview HTML/CSS/JS projects instantly</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="openNewFileDialog()" class="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-3.5 py-2 rounded-lg text-sm font-medium transition shadow-sm border border-slate-600 active:scale-95">
+                <i class="fa-solid fa-file-circle-plus text-indigo-400"></i>
+                <span>New File</span>
+            </button>
+            <button onclick="downloadProject()" class="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 text-slate-200 px-3.5 py-2 rounded-lg text-sm font-medium transition shadow-sm border border-slate-600 active:scale-95">
+                <i class="fa-solid fa-download text-emerald-400"></i>
+                <span>Export HTML</span>
+            </button>
+            <button onclick="runPreview()" class="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition shadow-lg shadow-indigo-600/30 active:scale-95">
+                <i class="fa-solid fa-play text-xs"></i>
+                <span>Preview HTML</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+
+        <aside class="w-64 bg-slate-800/80 border-r border-slate-700 flex flex-col shrink-0 select-none">
+            <div class="p-3 border-b border-slate-700 flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-open text-indigo-400"></i> Project Files
+                </span>
+                <button onclick="openNewFileDialog()" class="text-slate-400 hover:text-white p-1 rounded transition" title="New File">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+            <div id="file-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <!-- Dynamically populated files -->
+            </div>
+            <div class="p-3 border-t border-slate-700 bg-slate-800 text-xs text-slate-400 flex items-center justify-between">
+                <span id="file-count">0 files</span>
+                <span class="text-indigo-400 font-medium">UTF-8</span>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-950">
+
+            <!-- Code Editor Section -->
+            <div class="flex-1 flex flex-col border-r border-slate-800 overflow-hidden relative">
+                <!-- Active File Tab Bar -->
+                <div class="bg-slate-900 border-b border-slate-800 px-4 py-2 flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <i id="active-file-icon" class="fa-solid fa-file-code text-indigo-400"></i>
+                        <span id="active-file-name" class="font-medium text-sm text-slate-200">index.html</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="renameCurrentFile()" class="text-slate-400 hover:text-slate-200 px-2 py-1 text-xs rounded transition bg-slate-800 hover:bg-slate-700 border border-slate-700" title="Rename File">
+                            <i class="fa-solid fa-pen"></i> Rename
+                        </button>
+                        <button onclick="deleteCurrentFile()" class="text-slate-400 hover:text-rose-400 px-2 py-1 text-xs rounded transition bg-slate-800 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-800" title="Delete File">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Textarea Editor -->
+                <div class="flex-1 relative overflow-hidden flex">
+                    <textarea id="code-editor" 
+                        oninput="onCodeInput(this.value)"
+                        spellcheck="false"
+                        class="w-full h-full bg-slate-950 text-slate-200 code-font text-sm p-4 resize-none focus:outline-none leading-relaxed"
+                        placeholder="Type your code here..."></textarea>
+                </div>
+            </div>
+
+            <!-- Live Preview Pane -->
+            <div class="flex-1 flex flex-col bg-white overflow-hidden relative">
+                <!-- Preview Toolbar -->
+                <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-2 text-slate-700 text-sm font-semibold">
+                        <i class="fa-solid fa-desktop text-indigo-600"></i>
+                        <span>Live Preview Sandbox</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="runPreview()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1.5 rounded font-medium transition shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate"></i> Refresh
+                        </button>
+                        <button onclick="openPopoutPreview()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-1.5 rounded font-medium transition border border-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-external-link"></i> Popout
+                        </button>
+                    </div>
+                </div>
+                <!-- Iframe Container -->
+                <div class="flex-1 w-full h-full bg-white relative">
+                    <iframe id="preview-frame" class="w-full h-full border-0" sandbox="allow-scripts allow-modals"></iframe>
+                    <!-- Empty State / Welcome Overlay -->
+                    <div id="preview-placeholder" class="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center text-center p-6 text-slate-500">
+                        <div class="bg-indigo-50 text-indigo-600 p-4 rounded-2xl mb-3 shadow-sm border border-indigo-100">
+                            <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-slate-800 text-base mb-1">Ready to Preview Your App</h3>
+                        <p class="text-sm max-w-sm text-slate-500 mb-4">Click the <strong class="text-indigo-600">"Preview HTML"</strong> button above or in the top right to render your multi-file project live.</p>
+                        <button onclick="runPreview()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition shadow-md shadow-indigo-600/20">
+                            Run Preview Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="new-file-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-file-circle-plus text-indigo-400"></i> Create New File
+                </h3>
+                <button onclick="closeModal('new-file-modal')" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">File Name (e.g., style.css, script.js)</label>
+                <input type="text" id="new-file-name-input" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono" placeholder="script.js" />
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closeModal('new-file-modal')" class="px-4 py-2 rounded-lg text-sm font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Cancel</button>
+                <button onclick="confirmCreateFile()" class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/30">Create File</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification Box -->
+    <div id="notification-box" class="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-slate-200 px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center space-x-3 translate-y-24 opacity-0 transition-all duration-300">
+        <div id="notification-icon" class="text-indigo-400 text-lg">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div>
+            <h4 id="notification-title" class="font-semibold text-sm">Success</h4>
+            <p id="notification-msg" class="text-xs text-slate-400">Action completed successfully.</p>
+        </div>
+    </div>
+
+    <script>
+        // Default Project Files State
+        const files = {
+            "index.html": {
+                        "name": "index.html",
+                        "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Studio — Make Something Great</title>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n<body>\n    <nav class=\"nav\">\n        <a class=\"brand\" href=\"#\"><span class=\"brand-mark\">✦</span> studio<span class=\"dot\">.</span></a>\n        <div class=\"nav-links\"><a href=\"#work\">Explore</a><a href=\"#about\">About</a></div>\n        <a class=\"nav-cta\" href=\"#work\">Get started <span>↗</span></a>\n    </nav>\n    <main>\n        <section class=\"hero\">\n            <div class=\"eyebrow\"><span class=\"status-dot\"></span> YOUR NEXT IDEA STARTS HERE</div>\n            <h1>Make room for<br><span>something great.</span></h1>\n            <p class=\"intro\">A clean starting point for your next project. Bring an idea, make it yours, and see where it goes.</p>\n            <div class=\"actions\"><a class=\"primary-btn\" href=\"#work\">Explore the space <span>→</span></a><a class=\"text-btn\" href=\"#about\">Learn more</a></div>\n            <div class=\"hero-note\"><span class=\"note-line\"></span> DESIGNED TO BEGIN ANYTHING</div>\n        </section>\n        <section class=\"cards\" id=\"work\">\n            <article class=\"feature-card featured\"><div class=\"card-top\"><span class=\"card-icon purple\">✳</span><span class=\"card-number\">01 / CREATE</span></div><h2>Start with a spark.</h2><p>Turn a small thought into something worth sharing. The best things begin somewhere.</p><a href=\"#about\" class=\"card-link\">Find your starting point <span>↗</span></a><div class=\"orb orb-one\"></div></article>\n            <article class=\"feature-card\"><div class=\"card-top\"><span class=\"card-icon dark\">⌘</span><span class=\"card-number\">02 / BUILD</span></div><h2>Make it your own.</h2><p>Shape the details, try something new, and keep refining until it feels right.</p><a href=\"#about\" class=\"card-link\">See what’s possible <span>↗</span></a></article>\n            <article class=\"feature-card\"><div class=\"card-top\"><span class=\"card-icon green\">↗</span><span class=\"card-number\">03 / LAUNCH</span></div><h2>Bring it to life.</h2><p>Every finished project starts with a first step. This one is yours.</p><a href=\"#about\" class=\"card-link\">Take the first step <span>↗</span></a></article>\n        </section>\n        <section class=\"bottom-note\" id=\"about\"><span class=\"bottom-star\">✦</span><span>Made for ideas that are still becoming.</span><span class=\"bottom-right\">YOUR SPACE TO CREATE</span></section>\n    </main>\n    <footer><span>studio<span class=\"dot\">.</span></span><span>Simple by design. Open to possibility.</span><span>© 2026</span></footer>\n</body>\n</html>"
+            },
+            "style.css": {
+                        "name": "style.css",
+                        "content": "@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');\n:root{--bg:#08070d;--panel:#111019;--line:#252230;--text:#f6f4fb;--muted:#a09bad;--purple:#a879ff;--purple-dark:#4800a8}\n*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(72,0,168,.23),transparent 38%)}a{color:inherit;text-decoration:none}.nav{height:78px;max-width:1160px;margin:auto;padding:0 30px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}.brand{font:800 23px 'Manrope',sans-serif;letter-spacing:-1.3px}.brand-mark{display:inline-grid;place-items:center;width:30px;height:30px;margin-right:7px;border-radius:9px;background:linear-gradient(145deg,#a879ff,#6d28d9);font-size:16px;box-shadow:0 0 24px #6d28d955}.dot{color:var(--purple)}.nav-links{display:flex;gap:32px;color:#b4afc0;font-size:13px}.nav-links a:hover,.text-btn:hover{color:white}.nav-cta{font-size:12px;font-weight:600;border:1px solid #373141;border-radius:9px;padding:11px 15px;background:#ffffff06}.nav-cta span{margin-left:10px;color:var(--purple)}main{max-width:1100px;margin:auto;padding:0 30px}.hero{text-align:center;padding:93px 0 68px}.eyebrow{display:inline-flex;align-items:center;gap:9px;color:#c5a8ff;font-size:10px;letter-spacing:2px;font-weight:700}.status-dot{width:6px;height:6px;border-radius:50%;background:#a879ff;box-shadow:0 0 10px #a879ff}.hero h1{font:700 clamp(42px,6vw,72px)/1.08 'Manrope',sans-serif;letter-spacing:-3.7px;margin:25px 0 20px}.hero h1 span{background:linear-gradient(95deg,#fff 8%,#c7a8ff 55%,#8b5cf6);color:transparent;background-clip:text}.intro{max-width:490px;margin:0 auto;color:var(--muted);font-size:15px;line-height:1.8}.actions{display:flex;align-items:center;justify-content:center;gap:24px;margin-top:30px}.primary-btn{padding:13px 18px;border-radius:9px;background:linear-gradient(100deg,#7c3aed,#6d28d9);font-size:12px;font-weight:700;box-shadow:0 8px 28px #6d28d933;transition:transform .2s,box-shadow .2s}.primary-btn:hover{transform:translateY(-2px);box-shadow:0 10px 34px #8b5cf655}.primary-btn span{margin-left:18px}.text-btn{font-size:12px;color:#b9b3c5}.hero-note{margin-top:53px;display:flex;align-items:center;justify-content:center;gap:12px;color:#777183;font-size:9px;letter-spacing:2px}.note-line{width:24px;height:1px;background:#55436f}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.feature-card{position:relative;overflow:hidden;min-height:238px;padding:23px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,#14121d,#0d0c13);transition:transform .2s,border-color .2s}.feature-card:hover{transform:translateY(-4px);border-color:#55406f}.featured{background:linear-gradient(145deg,#1a122b,#100d19);border-color:#3b2a54}.card-top{display:flex;justify-content:space-between;align-items:center}.card-icon{width:35px;height:35px;border-radius:10px;display:grid;place-items:center;font-size:18px}.purple{color:#d5bdff;background:#6d28d933}.dark{color:#d3c9e6;background:#292434}.green{color:#9ee6c2;background:#17352c}.card-number{font-size:9px;letter-spacing:1.4px;color:#777183}.feature-card h2{font:700 19px 'Manrope',sans-serif;letter-spacing:-.6px;margin:25px 0 9px}.feature-card p{font-size:12px;line-height:1.8;color:#9d97a9;margin:0;max-width:290px}.card-link{display:inline-block;margin-top:22px;font-size:11px;font-weight:600;color:#d2c2f4}.card-link span{margin-left:7px;color:var(--purple)}.orb{position:absolute;width:130px;height:130px;border-radius:50%;filter:blur(35px);background:#782be8;opacity:.14;right:-50px;bottom:-70px;pointer-events:none}.bottom-note{display:flex;align-items:center;gap:12px;padding:25px 3px;color:#9b95a7;font-size:11px}.bottom-star{color:var(--purple);font-size:16px}.bottom-right{margin-left:auto;color:#6e687b;font-size:9px;letter-spacing:1.4px}footer{max-width:1160px;margin:12px auto 0;padding:23px 30px 28px;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;color:#777183;font-size:10px}footer>span:first-child{font:800 13px 'Manrope',sans-serif;color:#e7e2f0}@media(max-width:700px){.nav{padding:0 18px;height:68px}.nav-links{gap:14px}.nav-cta{padding:9px}.nav-cta span{margin-left:4px}main{padding:0 18px}.hero{padding:74px 0 54px}.hero h1{letter-spacing:-2.3px}.intro{font-size:13px}.cards{grid-template-columns:1fr}.feature-card{min-height:210px}.hero-note{margin-top:42px}.bottom-right{display:none}footer{padding:20px 18px;gap:12px;flex-wrap:wrap}footer span:nth-child(2){order:3;width:100%}}\n"
+            },
+            "script.js": {
+                        "name": "script.js",
+                        "content": "// The starter project is intentionally lightweight. Try changing the page text or styles, then refresh the preview.\ndocument.querySelectorAll('a[href^=\"#\"]').forEach(function(link){\n    link.addEventListener('click', function(event){\n        var target = document.querySelector(link.getAttribute('href'));\n        if (target) {\n            event.preventDefault();\n            target.scrollIntoView({ behavior: 'smooth', block: 'start' });\n        }\n    });\n});\n"
+            }
+};
+
+        let activeFileKey = 'index.html';
+
+        window.onload = function() {
+            renderFileList();
+            switchToFile('index.html');
+            runPreview();
+        };
+
+        function renderFileList() {
+            const listEl = document.getElementById('file-list');
+            listEl.innerHTML = '';
+            let count = 0;
+
+            for (const key in files) {
+                if (!files.hasOwnProperty(key)) continue;
+                count++;
+                const file = files[key];
+                const isActive = key === activeFileKey;
+                
+                let iconClass = 'fa-file-code text-slate-400';
+                if (file.name.endsWith('.html')) iconClass = 'fa-file-code text-orange-400';
+                else if (file.name.endsWith('.css')) iconClass = 'fa-file-css text-sky-400';
+                else if (file.name.endsWith('.js')) iconClass = 'fa-file-js text-yellow-400';
+
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between px-3 py-2 rounded-lg text-sm cursor-pointer transition ' + (isActive ? 'bg-indigo-600 text-white font-medium shadow-md shadow-indigo-600/30' : 'text-slate-300 hover:bg-slate-700/50');
+                div.innerHTML = '<div class="flex items-center space-x-2.5 truncate"><i class="fa-solid ' + iconClass + '"></i><span class="truncate">' + file.name + '</span></div>';
+                
+                div.onclick = (function(k) {
+                    return function() { switchToFile(k); };
+                })(key);
+
+                listEl.appendChild(div);
+            }
+            document.getElementById('file-count').innerText = count + ' file' + (count === 1 ? '' : 's');
+        }
+
+        function switchToFile(key) {
+            if (!files[key]) return;
+            activeFileKey = key;
+            
+            const editor = document.getElementById('code-editor');
+            editor.value = files[key].content;
+
+            document.getElementById('active-file-name').innerText = files[key].name;
+            
+            const iconEl = document.getElementById('active-file-icon');
+            if (files[key].name.endsWith('.html')) iconEl.className = 'fa-solid fa-file-code text-orange-400';
+            else if (files[key].name.endsWith('.css')) iconEl.className = 'fa-solid fa-file-css text-sky-400';
+            else if (files[key].name.endsWith('.js')) iconEl.className = 'fa-solid fa-file-js text-yellow-400';
+
+            renderFileList();
+        }
+
+        function onCodeInput(val) {
+            if (files[activeFileKey]) {
+                files[activeFileKey].content = val;
+            }
+        }
+
+        function openNewFileDialog() {
+            document.getElementById('new-file-name-input').value = '';
+            document.getElementById('new-file-modal').classList.remove('hidden');
+            setTimeout(function() {
+                document.getElementById('new-file-name-input').focus();
+            }, 50);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function confirmCreateFile() {
+            const nameInput = document.getElementById('new-file-name-input');
+            let name = nameInput.value.trim();
+            if (!name) {
+                showNotification('Error', 'File name cannot be empty', 'error');
+                return;
+            }
+            if (files[name]) {
+                showNotification('Error', 'A file with this name already exists', 'error');
+                return;
+            }
+
+            files[name] = {
+                name: name,
+                content: '// New file: ' + name + '\n'
+            };
+
+            closeModal('new-file-modal');
+            renderFileList();
+            switchToFile(name);
+            showNotification('File Created', 'Successfully created ' + name);
+        }
+
+        function renameCurrentFile() {
+            let newName = prompt('Enter new filename:', activeFileKey);
+            if (!newName) return;
+            newName = newName.trim();
+            if (!newName || newName === activeFileKey) return;
+
+            if (files[newName]) {
+                showNotification('Error', 'A file with that name already exists', 'error');
+                return;
+            }
+
+            files[newName] = files[activeFileKey];
+            files[newName].name = newName;
+            delete files[activeFileKey];
+            activeFileKey = newName;
+
+            renderFileList();
+            switchToFile(newName);
+            showNotification('Renamed', 'File renamed to ' + newName);
+        }
+
+        function deleteCurrentFile() {
+            const keys = Object.keys(files);
+            if (keys.length <= 1) {
+                showNotification('Error', 'You must keep at least one file in your project.', 'error');
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete ' + activeFileKey + '?')) {
+                delete files[activeFileKey];
+                activeFileKey = Object.keys(files)[0];
+                renderFileList();
+                switchToFile(activeFileKey);
+                showNotification('Deleted', 'File removed successfully');
+            }
+        }
+
+        function escapeRegExp(value) {
+            return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function buildStandaloneHTML() {
+            const htmlKey = Object.keys(files).find(name => name.toLowerCase().endsWith('.html'));
+            if (!htmlKey) {
+                showNotification('Preview Error', 'No .html file found in project.', 'error');
+                return null;
+            }
+
+            let html = files[htmlKey].content;
+
+            // Inline CSS files, replacing matching <link> tags where present.
+            Object.keys(files).filter(name => name.toLowerCase().endsWith('.css')).forEach(name => {
+                const escapedName = escapeRegExp(name);
+                const linkRegex = new RegExp(`<link\\b(?=[^>]*\\bhref\\s*=\\s*["'](?:\\.\\/)?${escapedName}["'])[^>]*>`, 'gi');
+                const styleTag = '<style>\n' + files[name].content + '\n</style>';
+                if (linkRegex.test(html)) {
+                    html = html.replace(linkRegex, () => styleTag);
+                } else if (/<\/head\s*>/i.test(html)) {
+                    html = html.replace(/<\/head\s*>/i, styleTag + '\n</head>');
+                } else {
+                    html = styleTag + '\n' + html;
+                }
+            });
+
+            // Inline JavaScript files, replacing matching <script src="..."> tags.
+            Object.keys(files).filter(name => name.toLowerCase().endsWith('.js')).forEach(name => {
+                const escapedName = escapeRegExp(name);
+                const scriptRegex = new RegExp(`<script\\b(?=[^>]*\\bsrc\\s*=\\s*["'](?:\\.\\/)?${escapedName}["'])[^>]*>\\s*<\\/script\\s*>`, 'gi');
+                const scriptTag = '<script>\n' + files[name].content + '\n<' + '/script>';
+                if (scriptRegex.test(html)) {
+                    html = html.replace(scriptRegex, () => scriptTag);
+                } else if (/<\/body\s*>/i.test(html)) {
+                    html = html.replace(/<\/body\s*>/i, scriptTag + '\n</body>');
+                } else {
+                    html += '\n' + scriptTag;
+                }
+            });
+
+            return html;
+        }
+
+        function runPreview() {
+            const htmlContent = buildStandaloneHTML();
+            if (htmlContent === null) return;
+
+            document.getElementById('preview-placeholder').classList.add('hidden');
+            const iframe = document.getElementById('preview-frame');
+            // srcdoc avoids Chrome blocking blob URLs inside a sandboxed iframe.
+            iframe.removeAttribute('src');
+            iframe.srcdoc = htmlContent;
+            showNotification('Preview Updated', 'Project compiled and rendered.');
+        }
+
+        function openPopoutPreview() {
+            const htmlContent = buildStandaloneHTML();
+            if (htmlContent === null) return;
+
+            const win = window.open('', '_blank');
+            if (!win) {
+                showNotification('Popout Blocked', 'Allow pop-ups to open the preview.', 'error');
+                return;
+            }
+            win.document.open();
+            win.document.write(htmlContent);
+            win.document.close();
+        }
+
+        function downloadProject() {
+            const htmlContent = buildStandaloneHTML();
+            if (htmlContent === null) return;
+
+            const url = URL.createObjectURL(new Blob([htmlContent], { type: 'text/html' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index-standalone.html';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showNotification('Exported', 'Standalone HTML file downloaded successfully!');
+        }
+
+        function showNotification(title, msg, type) {
+            const box = document.getElementById('notification-box');
+            document.getElementById('notification-title').innerText = title;
+            document.getElementById('notification-msg').innerText = msg;
+            
+            const icon = document.getElementById('notification-icon');
+            if (type === 'error') {
+                icon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-400"></i>';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-indigo-400"></i>';
+            }
+
+            box.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(function() {
+                box.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
